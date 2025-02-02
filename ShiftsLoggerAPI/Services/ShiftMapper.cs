@@ -1,10 +1,11 @@
+using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
 
 namespace ShiftsLoggerAPI.Services;
 
-public class ShiftMapper
+public class ShiftMapper : IShiftMapper
 {
-    public ShiftDTO shiftToDTO(Shift shift) =>
+    public ShiftDTO ShiftToDTO(Shift shift) =>
         new ShiftDTO
         {
             ShiftId = shift.ShiftId,

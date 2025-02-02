@@ -1,10 +1,12 @@
+using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
 
 namespace ShiftsLoggerAPI.Services;
 
-public class EmployeeMapper
+public class EmployeeMapper : IEmployeeMapper
 {
-    public EmployeeDTO employeeToDTO(Employee employee) =>
+
+    public EmployeeDTO EmployeeToDTO(Employee employee) =>
         new EmployeeDTO
         {
             EmployeeId = employee.EmployeeId,
