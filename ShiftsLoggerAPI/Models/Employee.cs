@@ -1,8 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ShiftsLoggerAPI.Models;
 
 public class Employee
 {
+    [Key]
     public long EmployeeId { get; set; }
-    public string Name { get; set; }
+
+    [Required]
+    public required string Name { get; set; }
+
     public List<Shift> Shifts { get; set; }
+
 }
