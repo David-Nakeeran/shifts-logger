@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerAPI.Data;
+using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
 using ShiftsLoggerAPI.Services;
 
@@ -16,9 +12,9 @@ namespace ShiftsLoggerAPI.Controllers
     public class EmployeeController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly EmployeeMapper _employeeMapper;
+        private readonly IEmployeeMapper _employeeMapper;
 
-        public EmployeeController(ApplicationDbContext context, EmployeeMapper employeeMapper)
+        public EmployeeController(ApplicationDbContext context, IEmployeeMapper employeeMapper)
         {
             _context = context;
             _employeeMapper = employeeMapper;
@@ -26,16 +22,23 @@ namespace ShiftsLoggerAPI.Controllers
 
         // GET: api/Employee
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
+        public async Task<ActionResult<IEnumerable<EmployeeDTO>>> GetEmployees()
         {
-            return await _context.Employees.ToListAsync();
+            return await _context.Employees
+                .Include(x => x.Shifts)
+                .Select(x => _employeeMapper.EmployeeToDTO(x))
+                .ToListAsync();
         }
 
         // GET: api/Employee/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Employee>> GetEmployee(long id)
+        public async Task<ActionResult<EmployeeDTO>> GetEmployee(long id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _context.Employees
+                .Include(x => x.Shifts)
+                .Where(x => x.EmployeeId == id)
+                .Select(x => _employeeMapper.EmployeeToDTO(x))
+                .FirstOrDefaultAsync();
 
             if (employee == null)
             {
@@ -48,29 +51,27 @@ namespace ShiftsLoggerAPI.Controllers
         // PUT: api/Employee/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEmployee(long id, Employee employee)
+        public async Task<IActionResult> PutEmployee(long id, EmployeeDTO employeeDTO)
         {
-            if (id != employee.EmployeeId)
+            if (id != employeeDTO.EmployeeId)
             {
                 return BadRequest();
             }
+            var employee = await _context.Employees.FindAsync(id);
 
-            _context.Entry(employee).State = EntityState.Modified;
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            employee.Name = employeeDTO.Name;
 
             try
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException) when (!EmployeeExists(id))
             {
-                if (!EmployeeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
             return NoContent();
@@ -79,12 +80,27 @@ namespace ShiftsLoggerAPI.Controllers
         // POST: api/Employee
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Employee>> PostEmployee(Employee employee)
+        public async Task<ActionResult<EmployeeDTO>> PostEmployee(EmployeeDTO employeeDTO)
         {
+            var employee = new Employee
+            {
+                Name = employeeDTO.Name
+            };
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetEmployee", new { id = employee.EmployeeId }, employee);
+            var employeeWithShifts = await _context.Employees
+                .Include(employee => employee.Shifts)
+                .FirstOrDefaultAsync(e => e.EmployeeId == e.EmployeeId);
+
+            if (employeeWithShifts == null)
+            {
+                return NotFound();
+            }
+
+            return CreatedAtAction(nameof(GetEmployee),
+                new { id = employee.EmployeeId },
+                _employeeMapper.EmployeeToDTO(employeeWithShifts));
         }
 
         // DELETE: api/Employee/5
