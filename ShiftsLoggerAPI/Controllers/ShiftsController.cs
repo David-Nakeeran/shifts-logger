@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
-using ShiftsLoggerAPI.Services;
 
 namespace ShiftsLoggerAPI.Controllers
 {
