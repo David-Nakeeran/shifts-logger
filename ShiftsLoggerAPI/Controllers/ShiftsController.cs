@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerAPI.Data;
@@ -11,11 +12,13 @@ namespace ShiftsLoggerAPI.Controllers
     public class ShiftsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IShiftService _shiftService;
         private readonly IShiftMapper _shiftMapper;
 
-        public ShiftsController(ApplicationDbContext context, IShiftMapper shiftMapper)
+        public ShiftsController(ApplicationDbContext context, IShiftService shiftService, IShiftMapper shiftMapper)
         {
             _context = context;
+            _shiftService = shiftService;
             _shiftMapper = shiftMapper;
 
         }
@@ -24,57 +27,44 @@ namespace ShiftsLoggerAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ShiftDTO>>> GetShifts()
         {
-            return await _context.Shifts
-                .Include(x => x.Employee)
-                .Select(x => _shiftMapper.ShiftToDTO(x))
-                .ToListAsync();
+            var shifts = await _shiftService.GetAllShiftsAsync();
+            var shiftDTOs = shifts.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
+            return Ok(shiftDTOs);
         }
 
         // GET: api/Shifts/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ShiftDTO>> GetShift(long id)
         {
-            var shift = await _context.Shifts
-                .Include(x => x.Employee)
-                .Where(x => x.ShiftId == id)
-                .Select(x => _shiftMapper.ShiftToDTO(x))
-                .FirstOrDefaultAsync();
+            var shift = await _shiftService.GetShiftByIdAsync(id);
 
             if (shift == null)
             {
                 return NotFound();
             }
+            var shiftDTO = _shiftMapper.ShiftToDTO(shift);
 
-            return shift;
+            return Ok(shiftDTO);
         }
 
         // PUT: api/Shifts/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutShift(long id, ShiftDTO shiftDTO)
+        public async Task<ActionResult> PutShift(long id, ShiftDTO shiftDTO)
         {
             if (id != shiftDTO.ShiftId)
             {
                 return BadRequest();
             }
-            var shift = await _context.Shifts.FindAsync(id);
+            var shift = await _shiftService.UpdateShift(id, shiftDTO);
             if (shift == null)
             {
                 return NotFound();
             }
-            shift.StartTime = shiftDTO.StartTime;
-            shift.EndTime = shiftDTO.EndTime;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException) when (!ShiftExists(id))
-            {
-                return NotFound();
-            }
+            var updatedShiftDTO = _shiftMapper.ShiftToDTO(shift);
 
-            return NoContent();
+            return Ok(updatedShiftDTO);
         }
 
         // POST: api/Shifts
@@ -122,9 +112,5 @@ namespace ShiftsLoggerAPI.Controllers
             return NoContent();
         }
 
-        private bool ShiftExists(long id)
-        {
-            return _context.Shifts.Any(e => e.ShiftId == id);
-        }
     }
 }
