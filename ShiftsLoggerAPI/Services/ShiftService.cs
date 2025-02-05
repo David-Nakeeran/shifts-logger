@@ -15,49 +15,154 @@ public class ShiftService : IShiftService
         _context = context;
     }
 
-    public async Task<List<Shift>> GetAllShiftsAsync()
+    public async Task<ServiceResponse<List<Shift>>> GetAllShiftsAsync()
     {
-        return await _context.Shifts
-            .Include(s => s.Employee)
-            .ToListAsync();
+        ServiceResponse<List<Shift>> _response = new ServiceResponse<List<Shift>>();
+        try
+        {
+            var shiftList = await _context.Shifts
+                        .Include(s => s.Employee)
+                        .ToListAsync();
+
+            _response.Success = true;
+            _response.Message = "Ok";
+            _response.Data = shiftList;
+        }
+        catch (Exception ex)
+        {
+            _response.Success = false;
+            _response.Message = "Error";
+            _response.Data = null;
+        }
+
+        return _response;
     }
 
-    public async Task<Shift> GetShiftByIdAsync(long id)
+    public async Task<ServiceResponse<Shift>> GetShiftByIdAsync(long id)
     {
-        var shift = await _context.Shifts
+        ServiceResponse<Shift> _response = new ServiceResponse<Shift>();
+        try
+        {
+            var shift = await _context.Shifts
                 .Include(x => x.Employee)
                 .FirstOrDefaultAsync(x => x.ShiftId == id);
 
-        return shift;
+            _response.Success = true;
+            _response.Message = "Ok";
+            _response.Data = shift;
+        }
+        catch (Exception ex)
+        {
+            _response.Success = false;
+            _response.Message = "Error";
+            _response.Data = null;
+        }
+        return _response;
     }
 
-    public async Task<Shift> UpdateShift(long id, ShiftDTO shiftDTO)
+    public async Task<ServiceResponse<Shift>> UpdateShift(long id, ShiftDTO shiftDTO)
     {
-        var savedShift = await _context.Shifts
-            .Include(s => s.Employee)
-            .FirstOrDefaultAsync(x => x.ShiftId == id);
-
-        if (savedShift == null)
-        {
-            return null;
-        }
-        savedShift.StartTime = shiftDTO.StartTime;
-        savedShift.EndTime = shiftDTO.EndTime;
+        ServiceResponse<Shift> _response = new ServiceResponse<Shift>();
         try
         {
+            var savedShift = await _context.Shifts
+                        .Include(s => s.Employee)
+                        .FirstOrDefaultAsync(x => x.ShiftId == id);
+
+            if (savedShift == null)
+            {
+                _response.Success = false;
+                _response.Message = "NotFound";
+                _response.Data = null;
+                return _response;
+            }
+
+            savedShift.StartTime = shiftDTO.StartTime;
+            savedShift.EndTime = shiftDTO.EndTime;
+
             await _context.SaveChangesAsync();
+
+            _response.Success = true;
+            _response.Message = "Updated";
+            _response.Data = savedShift;
         }
-        catch (DbUpdateConcurrencyException) when (!ShiftExists(id))
+        catch (Exception ex)
         {
-            return null;
+            _response.Success = false;
+            _response.Message = "Error";
+            _response.Data = null;
+        }
+        return _response;
+    }
+
+    public async Task<ServiceResponse<Shift>> CreateShift(ShiftDTO shiftDTO)
+    {
+        ServiceResponse<Shift> _response = new ServiceResponse<Shift>();
+
+        try
+        {
+            var shift = new Shift
+            {
+                EmployeeId = shiftDTO.EmployeeId,
+                StartTime = shiftDTO.StartTime,
+                EndTime = shiftDTO.EndTime,
+            };
+            _context.Shifts.Add(shift);
+            await _context.SaveChangesAsync();
+
+            var shiftWithEmployee = await _context.Shifts
+                .Include(shift => shift.Employee)
+                .FirstOrDefaultAsync(s => s.ShiftId == shift.ShiftId);
+
+            if (shiftWithEmployee == null)
+            {
+                _response.Success = false;
+                _response.Message = "NotFound";
+                _response.Data = null;
+            }
+
+            _response.Success = true;
+            _response.Message = "Ok";
+            _response.Data = shiftWithEmployee;
+        }
+        catch (Exception ex)
+        {
+            _response.Success = false;
+            _response.Message = "Error";
+            _response.Data = null;
         }
 
-        return savedShift;
+        return _response;
     }
 
-    private bool ShiftExists(long id)
+    public async Task<ServiceResponse<Shift>> DeleteShift(long id)
     {
-        return _context.Shifts.Any(e => e.ShiftId == id);
-    }
+        ServiceResponse<Shift> _response = new ServiceResponse<Shift>();
+        try
+        {
+            var shift = await _context.Shifts.FindAsync(id);
 
+            if (shift == null)
+            {
+                _response.Success = false;
+                _response.Message = "NotFound";
+                _response.Data = shift;
+                return _response;
+            }
+
+            _context.Shifts.Remove(shift);
+            await _context.SaveChangesAsync();
+
+            _response.Success = true;
+            _response.Message = "Shift deleted successflly";
+            _response.Data = shift;
+        }
+        catch (Exception ex)
+        {
+            _response.Success = false;
+            _response.Message = "Error";
+            _response.Data = null;
+        }
+        return _response;
+    }
 }
