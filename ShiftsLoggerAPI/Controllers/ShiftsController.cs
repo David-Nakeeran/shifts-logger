@@ -28,7 +28,18 @@ namespace ShiftsLoggerAPI.Controllers
         public async Task<ActionResult<IEnumerable<ShiftDTO>>> GetShifts()
         {
             var shifts = await _shiftService.GetAllShiftsAsync();
-            var shiftDTOs = shifts.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
+
+            if (!shifts.Success)
+            {
+                return BadRequest(shifts.Message);
+            }
+
+            if (shifts.Data == null)
+            {
+                return NotFound("No shifts found");
+            }
+
+            var shiftDTOs = shifts.Data.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
             return Ok(shiftDTOs);
         }
 
@@ -38,11 +49,11 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var shift = await _shiftService.GetShiftByIdAsync(id);
 
-            if (shift == null)
+            if (shift.Data == null)
             {
-                return NotFound();
+                return NotFound("No shift found");
             }
-            var shiftDTO = _shiftMapper.ShiftToDTO(shift);
+            var shiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
 
             return Ok(shiftDTO);
         }
@@ -54,15 +65,21 @@ namespace ShiftsLoggerAPI.Controllers
         {
             if (id != shiftDTO.ShiftId)
             {
-                return BadRequest();
+                return BadRequest("Shift ID in URL does not match the request body");
             }
             var shift = await _shiftService.UpdateShift(id, shiftDTO);
-            if (shift == null)
+
+            if (!shift.Success)
             {
-                return NotFound();
+                return BadRequest(shift.Message);
             }
 
-            var updatedShiftDTO = _shiftMapper.ShiftToDTO(shift);
+            if (shift.Data == null)
+            {
+                return NotFound("No shift found");
+            }
+
+            var updatedShiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
 
             return Ok(updatedShiftDTO);
         }
@@ -72,44 +89,42 @@ namespace ShiftsLoggerAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<ShiftDTO>> PostShift(ShiftDTO shiftDTO)
         {
-            var shift = new Shift
-            {
-                EmployeeId = shiftDTO.EmployeeId,
-                StartTime = shiftDTO.StartTime,
-                EndTime = shiftDTO.EndTime,
-            };
-            _context.Shifts.Add(shift);
-            await _context.SaveChangesAsync();
+            var createdShift = await _shiftService.CreateShift(shiftDTO);
 
-            var shiftWithEmployee = await _context.Shifts
-                .Include(shift => shift.Employee)
-                .FirstOrDefaultAsync(s => s.ShiftId == shift.ShiftId);
-
-            if (shiftWithEmployee == null)
+            if (!createdShift.Success)
             {
-                return NotFound();
+                return BadRequest(createdShift.Message);
+            }
+
+            if (createdShift.Data == null)
+            {
+                return NotFound(createdShift.Message);
             }
 
             return CreatedAtAction(
                 nameof(GetShift),
-                new { id = shift.ShiftId },
-                _shiftMapper.ShiftToDTO(shiftWithEmployee));
+                new { id = createdShift.Data.ShiftId },
+                _shiftMapper.ShiftToDTO(createdShift.Data));
         }
 
         // DELETE: api/Shifts/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteShift(long id)
+        public async Task<ActionResult> DeleteShift(long id)
         {
-            var shift = await _context.Shifts.FindAsync(id);
-            if (shift == null)
+            var shift = await _shiftService.DeleteShift(id);
+
+            if (!shift.Success)
             {
-                return NotFound();
+                return BadRequest(shift.Message);
             }
 
-            _context.Shifts.Remove(shift);
-            await _context.SaveChangesAsync();
+            if (shift.Data == null)
+            {
+                return NotFound(shift.Message);
+            }
+            var deletedShiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
 
-            return NoContent();
+            return Ok(deletedShiftDTO);
         }
 
     }
