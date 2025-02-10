@@ -29,14 +29,14 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var shifts = await _shiftService.GetAllShiftsAsync();
 
+            if (shifts.Message == "NotFound")
+            {
+                return NotFound(shifts.Message);
+            }
+
             if (!shifts.Success)
             {
                 return BadRequest(shifts.Message);
-            }
-
-            if (shifts.Data == null)
-            {
-                return NotFound("No shifts found");
             }
 
             var shiftDTOs = shifts.Data.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
@@ -49,10 +49,11 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var shift = await _shiftService.GetShiftByIdAsync(id);
 
-            if (shift.Data == null)
+            if (shift.Message == "NotFound")
             {
-                return NotFound("No shift found");
+                return NotFound(shift.Message);
             }
+
             var shiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
 
             return Ok(shiftDTO);
@@ -69,14 +70,14 @@ namespace ShiftsLoggerAPI.Controllers
             }
             var shift = await _shiftService.UpdateShift(id, shiftDTO);
 
+            if (shift.Message == "NotFound")
+            {
+                return NotFound(shift.Message);
+            }
+
             if (!shift.Success)
             {
                 return BadRequest(shift.Message);
-            }
-
-            if (shift.Data == null)
-            {
-                return NotFound("No shift found");
             }
 
             var updatedShiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
@@ -89,16 +90,23 @@ namespace ShiftsLoggerAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<ShiftDTO>> PostShift(ShiftDTO shiftDTO)
         {
+            var employeeExists = await _context.Employees.AnyAsync(e => e.EmployeeId == shiftDTO.EmployeeId);
+
+            if (!employeeExists)
+            {
+                return BadRequest("Employee not found");
+            }
+
             var createdShift = await _shiftService.CreateShift(shiftDTO);
+
+            if (createdShift.Message == "NotFound")
+            {
+                return NotFound(createdShift.Message);
+            }
 
             if (!createdShift.Success)
             {
                 return BadRequest(createdShift.Message);
-            }
-
-            if (createdShift.Data == null)
-            {
-                return NotFound(createdShift.Message);
             }
 
             return CreatedAtAction(
@@ -113,15 +121,16 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var shift = await _shiftService.DeleteShift(id);
 
+            if (shift.Message == "NotFound")
+            {
+                return NotFound(shift.Message);
+            }
+
             if (!shift.Success)
             {
                 return BadRequest(shift.Message);
             }
 
-            if (shift.Data == null)
-            {
-                return NotFound(shift.Message);
-            }
             var deletedShiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
 
             return Ok(deletedShiftDTO);
