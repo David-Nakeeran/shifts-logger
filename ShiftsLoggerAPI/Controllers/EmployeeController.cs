@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerAPI.Data;
@@ -13,68 +14,78 @@ namespace ShiftsLoggerAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IEmployeeMapper _employeeMapper;
+        private readonly IEmployeeService _employeeService;
 
-        public EmployeeController(ApplicationDbContext context, IEmployeeMapper employeeMapper)
+        public EmployeeController(ApplicationDbContext context, IEmployeeMapper employeeMapper, IEmployeeService employeeService)
         {
             _context = context;
             _employeeMapper = employeeMapper;
+            _employeeService = employeeService;
         }
 
         // GET: api/Employee
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EmployeeDTO>>> GetEmployees()
         {
-            return await _context.Employees
-                .Include(x => x.Shifts)
-                .Select(x => _employeeMapper.EmployeeToDTO(x))
-                .ToListAsync();
+            var employees = await _employeeService.GetAllEmployeesAsync();
+
+            if (employees.Message == "NotFound")
+            {
+                return NotFound(employees.Message);
+            }
+
+            if (!employees.Success)
+            {
+                return BadRequest(employees.Message);
+            }
+
+            var employeesDTO = employees.Data.Select(x => _employeeMapper.EmployeeToDTO(x)).ToList();
+            return Ok(employeesDTO);
         }
 
         // GET: api/Employee/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EmployeeDTO>> GetEmployee(long id)
         {
-            var employee = await _context.Employees
-                .Include(x => x.Shifts)
-                .Where(x => x.EmployeeId == id)
-                .Select(x => _employeeMapper.EmployeeToDTO(x))
-                .FirstOrDefaultAsync();
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
 
-            if (employee == null)
+            if (employee.Message == "NotFound")
             {
-                return NotFound();
+                return NotFound(employee.Message);
             }
 
-            return employee;
+            if (!employee.Success)
+            {
+                return BadRequest(employee.Message);
+            }
+
+            var employeeDTO = _employeeMapper.EmployeeToDTO(employee.Data);
+            return Ok(employeeDTO);
         }
 
         // PUT: api/Employee/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEmployee(long id, EmployeeDTO employeeDTO)
+        public async Task<ActionResult> PutEmployee(long id, EmployeeDTO employeeDTO)
         {
             if (id != employeeDTO.EmployeeId)
             {
-                return BadRequest();
+                return BadRequest("Employee ID in URL does not match response body");
             }
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _employeeService.UpdateEmployee(id, employeeDTO);
 
-            if (employee == null)
+            if (employee.Message == "NotFound")
             {
-                return NotFound();
-            }
-            employee.Name = employeeDTO.Name;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException) when (!EmployeeExists(id))
-            {
-                return NotFound();
+                return NotFound(employee.Message);
             }
 
-            return NoContent();
+            if (!employee.Success)
+            {
+                return BadRequest(employee.Message);
+            }
+
+            var updatedEmployeeDTO = _employeeMapper.EmployeeToDTO(employee.Data);
+            return Ok(updatedEmployeeDTO);
         }
 
         // POST: api/Employee
@@ -82,46 +93,42 @@ namespace ShiftsLoggerAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<EmployeeDTO>> PostEmployee(EmployeeDTO employeeDTO)
         {
-            var employee = new Employee
-            {
-                Name = employeeDTO.Name
-            };
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
+            var createdEmployee = await _employeeService.CreateEmployee(employeeDTO);
 
-            var employeeWithShifts = await _context.Employees
-                .Include(employee => employee.Shifts)
-                .FirstOrDefaultAsync(e => e.EmployeeId == e.EmployeeId);
-
-            if (employeeWithShifts == null)
+            if (createdEmployee.Message == "NotFound")
             {
-                return NotFound();
+                return NotFound(createdEmployee.Message);
             }
 
-            return CreatedAtAction(nameof(GetEmployee),
-                new { id = employee.EmployeeId },
-                _employeeMapper.EmployeeToDTO(employeeWithShifts));
+            if (!createdEmployee.Success)
+            {
+                return BadRequest(createdEmployee.Message);
+            }
+
+            return CreatedAtAction(
+                nameof(GetEmployee),
+                new { id = createdEmployee.Data.EmployeeId },
+                _employeeMapper.EmployeeToDTO(createdEmployee.Data));
         }
 
         // DELETE: api/Employee/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEmployee(long id)
+        public async Task<ActionResult> DeleteEmployee(long id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null)
+            var employee = await _employeeService.DeleteEmployee(id);
+
+            if (employee.Message == "NotFound")
             {
-                return NotFound();
+                return NotFound(employee.Message);
             }
 
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
+            if (!employee.Success)
+            {
+                return BadRequest(employee.Message);
+            }
 
-            return NoContent();
-        }
-
-        private bool EmployeeExists(long id)
-        {
-            return _context.Employees.Any(e => e.EmployeeId == id);
+            var deletedEmployeeDTO = _employeeMapper.EmployeeToDTO(employee.Data);
+            return Ok(deletedEmployeeDTO);
         }
     }
 }
