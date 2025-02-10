@@ -47,6 +47,14 @@ public class ShiftService : IShiftService
                 .Include(x => x.Employee)
                 .FirstOrDefaultAsync(x => x.ShiftId == id);
 
+            if (shift == null)
+            {
+                _response.Success = false;
+                _response.Message = "NotFound";
+                _response.Data = null;
+                return _response;
+            }
+
             _response.Success = true;
             _response.Message = "Ok";
             _response.Data = shift;
@@ -119,6 +127,7 @@ public class ShiftService : IShiftService
                 _response.Success = false;
                 _response.Message = "NotFound";
                 _response.Data = null;
+                return _response;
             }
 
             _response.Success = true;
@@ -146,7 +155,7 @@ public class ShiftService : IShiftService
             {
                 _response.Success = false;
                 _response.Message = "NotFound";
-                _response.Data = shift;
+                _response.Data = null;
                 return _response;
             }
 
@@ -154,7 +163,7 @@ public class ShiftService : IShiftService
             await _context.SaveChangesAsync();
 
             _response.Success = true;
-            _response.Message = "Shift deleted successflly";
+            _response.Message = "Shift deleted successfully";
             _response.Data = shift;
         }
         catch (Exception ex)
