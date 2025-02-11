@@ -162,9 +162,6 @@ public class ShiftService : IShiftService
             _context.Shifts.Remove(shift);
             await _context.SaveChangesAsync();
 
-            _response.Success = true;
-            _response.Message = "Shift deleted successfully";
-            _response.Data = shift;
         }
         catch (Exception ex)
         {

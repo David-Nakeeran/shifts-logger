@@ -113,7 +113,7 @@ namespace ShiftsLoggerAPI.Controllers
 
         // DELETE: api/Employee/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteEmployee(long id)
+        public async Task<IActionResult> DeleteEmployee(long id)
         {
             var employee = await _employeeService.DeleteEmployee(id);
 
@@ -127,8 +127,7 @@ namespace ShiftsLoggerAPI.Controllers
                 return BadRequest(employee.Message);
             }
 
-            var deletedEmployeeDTO = _employeeMapper.EmployeeToDTO(employee.Data);
-            return Ok(deletedEmployeeDTO);
+            return NoContent();
         }
     }
 }

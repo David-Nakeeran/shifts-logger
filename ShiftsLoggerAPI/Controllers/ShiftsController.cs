@@ -94,7 +94,7 @@ namespace ShiftsLoggerAPI.Controllers
 
             if (!employeeExists)
             {
-                return BadRequest("Employee not found");
+                return BadRequest("Employee does not exist");
             }
 
             var createdShift = await _shiftService.CreateShift(shiftDTO);
@@ -117,7 +117,7 @@ namespace ShiftsLoggerAPI.Controllers
 
         // DELETE: api/Shifts/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteShift(long id)
+        public async Task<IActionResult> DeleteShift(long id)
         {
             var shift = await _shiftService.DeleteShift(id);
 
@@ -131,9 +131,7 @@ namespace ShiftsLoggerAPI.Controllers
                 return BadRequest(shift.Message);
             }
 
-            var deletedShiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
-
-            return Ok(deletedShiftDTO);
+            return NoContent();
         }
 
     }

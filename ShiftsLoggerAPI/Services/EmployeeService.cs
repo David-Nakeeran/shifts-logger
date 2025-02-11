@@ -157,9 +157,6 @@ public class EmployeeService : IEmployeeService
             _context.Employees.Remove(employee);
             await _context.SaveChangesAsync();
 
-            _response.Success = true;
-            _response.Message = "Employee deleted successfully";
-            _response.Data = employee;
         }
         catch (Exception ex)
         {
