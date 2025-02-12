@@ -8,31 +8,29 @@ namespace ShiftsLoggerAPI.Services;
 
 public class ShiftService : IShiftService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IShiftRepository _shiftRepo;
 
-    public ShiftService(ApplicationDbContext context)
+    public ShiftService(IShiftRepository shiftRepository)
     {
-        _context = context;
+        _shiftRepo = shiftRepository;
     }
 
     public async Task<ServiceResponse<List<Shift>>> GetAllShiftsAsync()
     {
         ServiceResponse<List<Shift>> _response = new ServiceResponse<List<Shift>>();
-        try
-        {
-            var shiftList = await _context.Shifts
-                        .Include(s => s.Employee)
-                        .ToListAsync();
 
+        var shiftList = await _shiftRepo.GetAllWithEmployeeAsync();
+
+        if (shiftList.Any())
+        {
             _response.Success = true;
             _response.Message = "Ok";
             _response.Data = shiftList;
         }
-        catch (Exception ex)
+        else
         {
             _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
+            _response.Message = "No shifts found";
         }
 
         return _response;
@@ -41,31 +39,33 @@ public class ShiftService : IShiftService
     public async Task<ServiceResponse<Shift>> GetShiftByIdAsync(long id)
     {
         ServiceResponse<Shift> _response = new ServiceResponse<Shift>();
-        try
-        {
-            var shift = await _context.Shifts
-                .Include(x => x.Employee)
-                .FirstOrDefaultAsync(x => x.ShiftId == id);
 
-            if (shift == null)
-            {
-                _response.Success = false;
-                _response.Message = "NotFound";
-                _response.Data = null;
-                return _response;
-            }
 
-            _response.Success = true;
-            _response.Message = "Ok";
-            _response.Data = shift;
-        }
-        catch (Exception ex)
-        {
-            _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
-        }
-        return _response;
+        // try
+        // {
+        //     var shift = await _context.Shifts
+        //         .Include(x => x.Employee)
+        //         .FirstOrDefaultAsync(x => x.ShiftId == id);
+
+        //     if (shift == null)
+        //     {
+        //         _response.Success = false;
+        //         _response.Message = "NotFound";
+        //         _response.Data = null;
+        //         return _response;
+        //     }
+
+        //     _response.Success = true;
+        //     _response.Message = "Ok";
+        //     _response.Data = shift;
+        // }
+        // catch (Exception ex)
+        // {
+        //     _response.Success = false;
+        //     _response.Message = "Error";
+        //     _response.Data = null;
+        // }
+        // return _response;
     }
 
     public async Task<ServiceResponse<Shift>> UpdateShift(long id, ShiftDTO shiftDTO)
