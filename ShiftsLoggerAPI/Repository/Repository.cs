@@ -43,12 +43,18 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task DeleteAsync(long id)
     {
-        var entityToBeDeleted = await _dbSet.FindAsync(id);
-        if (entityToBeDeleted != null)
+        try
         {
-            _dbSet.Remove(entityToBeDeleted);
-            await _context.SaveChangesAsync();
+            var entityToBeDeleted = await _dbSet.FindAsync(id);
+            if (entityToBeDeleted != null)
+            {
+                _dbSet.Remove(entityToBeDeleted);
+                await _context.SaveChangesAsync();
+            }
         }
-
+        catch (Exception ex)
+        {
+            throw new Exception("Error deleting the shift", ex);
+        }
     }
 }
