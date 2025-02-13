@@ -19,9 +19,8 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            throw new Exception("Error fetching all employees", ex);
         }
-        return new List<Shift>();
     }
 
     public async Task<Shift> GetByIdWithEmployeeAsync(long id)
@@ -32,33 +31,45 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
                 .Include(x => x.Employee)
                 .FirstOrDefaultAsync(x => x.ShiftId == id);
 
-            if (shift != null)
+            if (shift == null)
             {
-                return shift;
+                return null;
             }
+            return shift;
 
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            throw new Exception("Error finding shift", ex);
         }
-        return null;
     }
 
-    public Task<Shift> UpdateWithEmployeeAsync(long id, ShiftDTO entity)
+    public async Task<Shift> UpdateWithEmployeeAsync(long id, ShiftDTO entity)
     {
+        try
+        {
+            var savedShift = await _dbSet
+                        .Include(s => s.Employee)
+                        .FirstOrDefaultAsync(x => x.ShiftId == id);
 
+            if (savedShift == null)
+            {
+                return null;
+            }
+            _dbSet.Entry(savedShift).CurrentValues.SetValues(entity);
+            await _context.SaveChangesAsync();
+            return savedShift;
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Error updating the shift", ex);
+        }
     }
 
     public async Task DeleteAsync(long id)
     {
-        var entityToBeDeleted = await _dbSet.FindAsync(id);
-        if (entityToBeDeleted != null)
-        {
-            _dbSet.Remove(entityToBeDeleted);
-            await _context.SaveChangesAsync();
-        }
-
+        await base.DeleteAsync(id);
     }
 
 }
