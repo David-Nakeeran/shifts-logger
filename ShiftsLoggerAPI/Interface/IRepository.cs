@@ -12,6 +12,6 @@ public interface IRepository<T> where T : class
 
     public Task<T> UpdateAsync(long id, T entity);
 
-    public Task DeleteAsync(long id);
+    public Task<bool> DeleteAsync(long id);
 
 }
