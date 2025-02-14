@@ -29,17 +29,17 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var shifts = await _shiftService.GetAllShiftsAsync();
 
-            if (shifts.Message == "NotFound")
-            {
-                return NotFound(shifts.Message);
-            }
-
             if (!shifts.Success)
             {
                 return BadRequest(shifts.Message);
             }
 
-            var shiftDTOs = shifts.Data.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
+            var shiftDTOs = shifts?.Data?.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
+
+            if (shiftDTOs?.Count == 0)
+            {
+                return Ok(new List<ShiftDTO>());
+            }
             return Ok(shiftDTOs);
         }
 
@@ -49,9 +49,14 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var shift = await _shiftService.GetShiftByIdAsync(id);
 
-            if (shift.Message == "NotFound")
+            if (shift.Data == null)
             {
                 return NotFound(shift.Message);
+            }
+
+            if (!shift.Success)
+            {
+                return BadRequest(shift.Message);
             }
 
             var shiftDTO = _shiftMapper.ShiftToDTO(shift.Data);
