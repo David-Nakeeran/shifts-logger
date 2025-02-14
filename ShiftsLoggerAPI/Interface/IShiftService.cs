@@ -12,5 +12,5 @@ public interface IShiftService
 
     public Task<ServiceResponse<Shift>> UpdateShift(long id, ShiftDTO shiftDTO);
 
-    public Task<ServiceResponse<Shift>> DeleteShift(long id);
+    public Task<ServiceResponse<bool>> DeleteShift(long id);
 }
