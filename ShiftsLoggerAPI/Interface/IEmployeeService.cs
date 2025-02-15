@@ -12,5 +12,5 @@ public interface IEmployeeService
 
     public Task<ServiceResponse<Employee>> UpdateEmployee(long id, EmployeeDTO employeeDTO);
 
-    public Task<ServiceResponse<Employee>> DeleteEmployee(long id);
+    public Task<ServiceResponse<bool>> DeleteEmployee(long id);
 }
