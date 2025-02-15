@@ -7,11 +7,11 @@ namespace ShiftsLoggerAPI.Services;
 
 public class EmployeeService : IEmployeeService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IEmployeeRepository _employeeRepo;
 
-    public EmployeeService(ApplicationDbContext context)
+    public EmployeeService(IEmployeeRepository employeeRepository)
     {
-        _context = context;
+        _employeeRepo = employeeRepository;
     }
 
     public async Task<ServiceResponse<List<Employee>>> GetAllEmployeesAsync()
@@ -20,20 +20,23 @@ public class EmployeeService : IEmployeeService
 
         try
         {
-            var employeeList = await _context.Employees
-                .Include(x => x.Shifts)
-                .ToListAsync();
-
-            _response.Success = true;
-            _response.Message = "Ok";
-            _response.Data = employeeList;
-
+            var employeeList = await _employeeRepo.GetAllWithShiftsAsync();
+            if (employeeList.Any())
+            {
+                _response.Success = true;
+                _response.Message = "Ok";
+                _response.Data = employeeList;
+            }
+            else
+            {
+                _response.Message = "NotFound";
+            }
         }
         catch (Exception ex)
         {
+            // log error
             _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
+            _response.Message = $"{ex.Message}";
         }
         return _response;
 
@@ -44,14 +47,12 @@ public class EmployeeService : IEmployeeService
 
         try
         {
-            var employee = await _context.Employees
-                .Include(x => x.Shifts)
-                .FirstOrDefaultAsync(employee => employee.EmployeeId == id);
+            var employee = await _employeeRepo.GetByIdWithShiftsAsync(id);
 
             if (employee == null)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
+                _response.Message = $"Employee with ID {id} not found";
                 _response.Data = null;
                 return _response;
             }
@@ -64,8 +65,9 @@ public class EmployeeService : IEmployeeService
         catch (Exception ex)
         {
             _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
+            _response.Message = $"{ex.Message}";
+            // Add Ilogger
+
         }
         return _response;
     }
@@ -76,34 +78,24 @@ public class EmployeeService : IEmployeeService
 
         try
         {
-            var employee = new Employee
-            {
-                Name = employeeDTO.Name,
-            };
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
+            var createdEmployee = await _employeeRepo.CreateWithShiftAsync(employeeDTO);
 
-            var employeeWithShifts = await _context.Employees
-                .Include(x => x.Shifts)
-                .FirstOrDefaultAsync(e => e.EmployeeId == employee.EmployeeId);
-
-            if (employeeWithShifts == null)
+            if (createdEmployee == null)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
+                _response.Message = $"Employee with ID {employeeDTO.EmployeeId} not found";
                 _response.Data = null;
                 return _response;
             }
 
             _response.Success = true;
             _response.Message = "Ok";
-            _response.Data = employeeWithShifts;
+            _response.Data = createdEmployee;
         }
         catch (Exception ex)
         {
             _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
+            _response.Message = $"{ex.Message}";
         }
         return _response;
     }
@@ -112,20 +104,15 @@ public class EmployeeService : IEmployeeService
         ServiceResponse<Employee> _response = new ServiceResponse<Employee>();
         try
         {
-            var savedEmployee = await _context.Employees
-                        .Include(x => x.Shifts)
-                        .FirstOrDefaultAsync(x => x.EmployeeId == id);
+            var savedEmployee = await _employeeRepo.UpdateWithShiftsAsync(id, employeeDTO);
 
             if (savedEmployee == null)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
+                _response.Message = $"Employee with ID {id} not found";
                 _response.Data = null;
                 return _response;
             }
-
-            savedEmployee.Name = employeeDTO.Name;
-            await _context.SaveChangesAsync();
 
             _response.Success = true;
             _response.Message = "Updated";
@@ -134,35 +121,33 @@ public class EmployeeService : IEmployeeService
         catch (Exception ex)
         {
             _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
+            _response.Message = $"{ex.Message}";
         }
         return _response;
     }
-    public async Task<ServiceResponse<Employee>> DeleteEmployee(long id)
+    public async Task<ServiceResponse<bool>> DeleteEmployee(long id)
     {
-        ServiceResponse<Employee> _response = new ServiceResponse<Employee>();
+        ServiceResponse<bool> _response = new ServiceResponse<bool>();
         try
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var isEmployeeDeleted = await _employeeRepo.DeleteEmployeeAsync(id);
 
-            if (employee == null)
+            if (!isEmployeeDeleted)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
-                _response.Data = null;
+                _response.Message = $"Employee with ID {id} not found";
+                _response.Data = false;
                 return _response;
             }
 
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
-
+            _response.Success = true;
+            _response.Message = "Employee deleted successfully";
+            _response.Data = true;
         }
         catch (Exception ex)
         {
             _response.Success = false;
-            _response.Message = "Error";
-            _response.Data = null;
+            _response.Message = $"{ex.Message}";
         }
         return _response;
     }
