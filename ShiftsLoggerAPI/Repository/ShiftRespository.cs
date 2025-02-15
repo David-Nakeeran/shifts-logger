@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
 
@@ -6,7 +7,8 @@ namespace ShiftsLoggerAPI.Repository;
 
 public class ShiftRepository : Repository<Shift>, IShiftRepository
 {
-    public ShiftRepository(DbContext context) : base(context)
+
+    public ShiftRepository(ApplicationDbContext context) : base(context)
     {
     }
     public async Task<List<Shift>> GetAllWithEmployeeAsync()
@@ -17,9 +19,13 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
                         .Include(s => s.Employee)
                         .ToListAsync();
         }
+        catch (DbUpdateException dbEx)
+        {
+            throw new Exception("Database error occurred while retrieving all shifts", dbEx);
+        }
         catch (Exception ex)
         {
-            throw new Exception("Error fetching all employees", ex);
+            throw new Exception("Error fetching all shifts", ex);
         }
     }
 
@@ -37,6 +43,10 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
             }
             return shift;
 
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new Exception("Database error occurred retrieving a shift", dbEx);
         }
         catch (Exception ex)
         {
@@ -66,6 +76,11 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
                 return null;
             }
             return shiftWithEmployee;
+
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new Exception("Database error occurred while creating a shift", dbEx);
         }
         catch (Exception ex)
         {
@@ -85,10 +100,14 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
             {
                 return null;
             }
-            _dbSet.Entry(savedShift).CurrentValues.SetValues(entity);
+            _context.Entry(savedShift).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
             return savedShift;
 
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new Exception("Database error occurred while updating shift", dbEx);
         }
         catch (Exception ex)
         {
@@ -101,4 +120,8 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
         return await base.DeleteAsync(id);
     }
 
+    public Task<bool> EmployeeExistsAsync(long id)
+    {
+        throw new NotImplementedException();
+    }
 }
