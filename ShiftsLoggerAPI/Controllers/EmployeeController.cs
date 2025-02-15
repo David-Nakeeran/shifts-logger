@@ -12,13 +12,11 @@ namespace ShiftsLoggerAPI.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
         private readonly IEmployeeMapper _employeeMapper;
         private readonly IEmployeeService _employeeService;
 
-        public EmployeeController(ApplicationDbContext context, IEmployeeMapper employeeMapper, IEmployeeService employeeService)
+        public EmployeeController(IEmployeeMapper employeeMapper, IEmployeeService employeeService)
         {
-            _context = context;
             _employeeMapper = employeeMapper;
             _employeeService = employeeService;
         }
@@ -39,7 +37,7 @@ namespace ShiftsLoggerAPI.Controllers
                 return BadRequest(employees.Message);
             }
 
-            var employeesDTO = employees.Data.Select(x => _employeeMapper.EmployeeToDTO(x)).ToList();
+            var employeesDTO = employees?.Data?.Select(x => _employeeMapper.EmployeeToDTO(x)).ToList();
             return Ok(employeesDTO);
         }
 
@@ -49,7 +47,7 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(id);
 
-            if (employee.Message == "NotFound")
+            if (employee.Data == null)
             {
                 return NotFound(employee.Message);
             }
@@ -74,7 +72,7 @@ namespace ShiftsLoggerAPI.Controllers
             }
             var employee = await _employeeService.UpdateEmployee(id, employeeDTO);
 
-            if (employee.Message == "NotFound")
+            if (employee.Data == null)
             {
                 return NotFound(employee.Message);
             }
@@ -95,7 +93,7 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var createdEmployee = await _employeeService.CreateEmployee(employeeDTO);
 
-            if (createdEmployee.Message == "NotFound")
+            if (createdEmployee.Data == null)
             {
                 return NotFound(createdEmployee.Message);
             }
@@ -117,7 +115,7 @@ namespace ShiftsLoggerAPI.Controllers
         {
             var employee = await _employeeService.DeleteEmployee(id);
 
-            if (employee.Message == "NotFound")
+            if (!employee.Data)
             {
                 return NotFound(employee.Message);
             }
