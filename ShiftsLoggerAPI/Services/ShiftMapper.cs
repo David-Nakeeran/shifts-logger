@@ -11,7 +11,6 @@ public class ShiftMapper : IShiftMapper
             ShiftId = shift.ShiftId,
             EmployeeId = shift.EmployeeId,
             StartTime = shift.StartTime,
-            EndTime = shift.EndTime,
-            Name = shift.Employee.Name
+            EndTime = shift.EndTime
         };
 }
