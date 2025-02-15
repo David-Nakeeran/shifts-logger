@@ -10,9 +10,12 @@ public class ShiftService : IShiftService
 {
     private readonly IShiftRepository _shiftRepo;
 
-    public ShiftService(IShiftRepository shiftRepository)
+    private readonly IEmployeeRepository _employeeRepo;
+
+    public ShiftService(IShiftRepository shiftRepository, IEmployeeRepository employeeRepo)
     {
         _shiftRepo = shiftRepository;
+        _employeeRepo = employeeRepo;
     }
 
     public async Task<ServiceResponse<List<Shift>>> GetAllShiftsAsync()
@@ -83,7 +86,8 @@ public class ShiftService : IShiftService
             if (savedShift == null)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
+                _response.Message = $"Shift with ID {id} not found";
+                _response.Data = null;
                 return _response;
             }
 
@@ -105,12 +109,20 @@ public class ShiftService : IShiftService
 
         try
         {
+            var employeeExists = await _employeeRepo.EmployeeExistsAsync(shiftDTO.EmployeeId);
+            if (!employeeExists)
+            {
+                _response.Success = false;
+                _response.Message = "Employee does not exist";
+                return _response;
+            }
             var createdShift = await _shiftRepo.CreateWithEmployeeAsync(shiftDTO);
 
             if (createdShift == null)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
+                _response.Message = $"Shift with ID {shiftDTO.EmployeeId} not found";
+                _response.Data = null;
                 return _response;
             }
 
@@ -136,7 +148,8 @@ public class ShiftService : IShiftService
             if (!isShiftDeleted)
             {
                 _response.Success = false;
-                _response.Message = "NotFound";
+                _response.Message = $"Shift with ID {id} not found";
+                _response.Data = false;
                 return _response;
             }
 
