@@ -10,4 +10,9 @@ public interface IEmployeeRepository : IRepository<Employee>
 
     public Task<Employee> UpdateWithShiftsAsync(long id, EmployeeDTO entity);
 
+    public Task<Employee> CreateWithShiftAsync(EmployeeDTO entity);
+
+    public Task<bool> DeleteEmployeeAsync(long id);
+
+    public Task<bool> EmployeeExistsAsync(long id);
 }
