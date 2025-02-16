@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
@@ -100,7 +101,7 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
             {
                 return null;
             }
-            _context.Entry(savedShift).CurrentValues.SetValues(entity);
+            _dbSet.Entry(savedShift).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
             return savedShift;
 
