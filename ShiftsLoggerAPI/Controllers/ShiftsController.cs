@@ -95,6 +95,11 @@ namespace ShiftsLoggerAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<ShiftDTO>> PostShift(ShiftDTO shiftDTO)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var createdShift = await _shiftService.CreateShift(shiftDTO);
 
             if (createdShift.Message == "Employee does not exist")
