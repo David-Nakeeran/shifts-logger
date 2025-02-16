@@ -51,7 +51,7 @@ public class ShiftService : IShiftService
 
         try
         {
-            var shift = await _shiftRepo.GetByIdAsync(id);
+            var shift = await _shiftRepo.GetByIdWithEmployeeAsync(id);
 
             if (shift == null)
             {
