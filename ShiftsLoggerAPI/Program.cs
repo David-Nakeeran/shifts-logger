@@ -4,7 +4,6 @@ using ShiftsLoggerAPI.Models;
 using ShiftsLoggerAPI.Services;
 using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Repository;
-using ShiftsLoggerAPI.Validators;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,7 +20,6 @@ builder.Services.AddScoped<IShiftService, ShiftService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-builder.Services.AddScoped<EndTimeGreaterThanStartTimeAttribute>();
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 
 builder.Services.AddControllers();
