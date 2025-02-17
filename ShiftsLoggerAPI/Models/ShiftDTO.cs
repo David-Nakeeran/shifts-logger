@@ -1,8 +1,8 @@
-using ShiftsLoggerAPI.Validators;
+using System.ComponentModel.DataAnnotations;
 
 namespace ShiftsLoggerAPI.Models;
 
-public class ShiftDTO
+public class ShiftDTO : IValidatableObject
 {
     public long ShiftId { get; set; }
 
@@ -10,10 +10,17 @@ public class ShiftDTO
 
     public DateTime StartTime { get; set; }
 
-
-    [EndTimeGreaterThanStartTime(ErrorMessage = "EndTime must be greater than StartTime")]
     public DateTime EndTime { get; set; }
 
     public string EmployeeName { get; set; }
 
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (EndTime <= StartTime)
+        {
+            yield return new ValidationResult(
+                "EndTime must be greater than StartTime",
+                new[] { nameof(EndTime) });
+        }
+    }
 }
