@@ -16,6 +16,6 @@ public class ShiftDTO
     [JsonPropertyName("endTime")]
     public DateTime EndTime { get; set; }
 
-    [JsonPropertyName("name")]
+    [JsonPropertyName("employeeName")]
     public string Name { get; set; }
 }
