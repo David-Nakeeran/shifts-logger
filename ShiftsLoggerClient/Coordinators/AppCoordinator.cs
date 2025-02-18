@@ -1,5 +1,6 @@
 
 
+using ShiftsLoggerClient.Services;
 using ShiftsLoggerClient.Utilities;
 
 namespace ShiftsLoggerClient.Coordinators;
@@ -7,10 +8,12 @@ namespace ShiftsLoggerClient.Coordinators;
 class AppCoordinator
 {
     private readonly UserInput _userInput;
+    private readonly ShiftService _shiftService;
 
-    public AppCoordinator(UserInput userInput)
+    public AppCoordinator(UserInput userInput, ShiftService shiftService)
     {
         _userInput = userInput;
+        _shiftService = shiftService;
     }
     internal async Task Start()
     {
@@ -36,6 +39,7 @@ class AppCoordinator
                     break;
                 case "View all shifts":
                     Console.WriteLine("all shifts");
+                    await AllShifts();
                     break;
                 case "Create shift":
                     Console.WriteLine("create shift");
@@ -51,6 +55,20 @@ class AppCoordinator
                     break;
             }
 
+        }
+    }
+
+    public async Task AllShifts()
+    {
+        var shifts = await _shiftService.GetAllShifts();
+        foreach (var item in shifts)
+        {
+            Console.WriteLine(item.ShiftId.ToString());
+            Console.WriteLine(item.EmployeeId.ToString());
+            Console.WriteLine(item.StartTime.ToString());
+            Console.WriteLine(item.EndTime.ToString());
+            Console.WriteLine(item.Name.ToString());
+            Console.WriteLine("------------------");
         }
     }
 }
