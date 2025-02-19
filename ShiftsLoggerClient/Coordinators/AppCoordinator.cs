@@ -1,5 +1,6 @@
 
 
+using ShiftsLoggerClient.Display;
 using ShiftsLoggerClient.Services;
 using ShiftsLoggerClient.Utilities;
 
@@ -9,11 +10,13 @@ class AppCoordinator
 {
     private readonly UserInput _userInput;
     private readonly ShiftService _shiftService;
+    private readonly DisplayManager _displayManager;
 
-    public AppCoordinator(UserInput userInput, ShiftService shiftService)
+    public AppCoordinator(UserInput userInput, ShiftService shiftService, DisplayManager displayManager)
     {
         _userInput = userInput;
         _shiftService = shiftService;
+        _displayManager = displayManager;
     }
     internal async Task Start()
     {
@@ -49,6 +52,7 @@ class AppCoordinator
                     break;
                 case "Delete shift":
                     Console.WriteLine("delete shift");
+                    await GetShiftById();
                     break;
                 case "Quit application":
                     isAppActive = false;
@@ -61,14 +65,30 @@ class AppCoordinator
     public async Task AllShifts()
     {
         var shifts = await _shiftService.GetAllShifts();
-        foreach (var item in shifts)
+        _displayManager.RenderGetAllShiftsTable(shifts);
+        _userInput.WaitForUserInput();
+    }
+
+    internal async Task GetShiftById()
+    {
+        var shifts = await _shiftService.GetAllShifts();
+        _displayManager.RenderGetAllShiftsTable(shifts);
+        _userInput.WaitForUserInput();
+        var displayId = _userInput.GetId();
+        int count = 1;
+        long shiftId;
+        foreach (var shift in shifts)
         {
-            Console.WriteLine(item.ShiftId.ToString());
-            Console.WriteLine(item.EmployeeId.ToString());
-            Console.WriteLine(item.StartTime.ToString());
-            Console.WriteLine(item.EndTime.ToString());
-            Console.WriteLine(item.Name.ToString());
-            Console.WriteLine("------------------");
+            if (count == displayId)
+            {
+                shiftId = shift.ShiftId;
+                var shiftById = await _shiftService.GetShiftById(shiftId);
+                _displayManager.RenderGetShiftByIdTable(shiftById);
+                _userInput.WaitForUserInput();
+            }
+            count++;
+
         }
+
     }
 }
