@@ -31,6 +31,12 @@ public class UserInput
         return userSelection;
     }
 
+    internal int GetId()
+    {
+        int shiftId = AnsiConsole.Ask<int>("Please enter the id of shift");
+        return shiftId;
+    }
+
     internal void WaitForUserInput()
     {
         AnsiConsole.WriteLine("Press any key to continue...");
