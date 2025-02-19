@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using ShiftsLoggerClient.Coordinators;
+using ShiftsLoggerClient.Display;
 using ShiftsLoggerClient.Services;
 using ShiftsLoggerClient.UserInterface;
 using ShiftsLoggerClient.Utilities;
@@ -17,6 +18,8 @@ class Program
         services.AddSingleton<UserInput>();
         services.AddSingleton<EmployeeService>();
         services.AddSingleton<ShiftService>();
+        services.AddSingleton<CalculateDuration>();
+        services.AddSingleton<DisplayManager>();
         services.AddSingleton<AppCoordinator>();
 
         var serviceProvider = services.BuildServiceProvider();
