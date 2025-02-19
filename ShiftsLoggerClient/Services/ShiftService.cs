@@ -44,4 +44,21 @@ class ShiftService
             return new List<ShiftDTO>();
         }
     }
+
+    public async Task<ShiftDTO> GetShiftById(long id)
+    {
+        try
+        {
+            var requestUri = $"shifts/{id}";
+            await using Stream stream = await _httpClient.GetStreamAsync(requestUri);
+
+            var shift = await JsonSerializer.DeserializeAsync<ShiftDTO>(stream);
+            return shift ?? new ShiftDTO { };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error message: {ex.Message}");
+            return new ShiftDTO { };
+        }
+    }
 }
