@@ -1,5 +1,3 @@
-
-
 using System.Net.Http.Headers;
 using System.Text.Json;
 using ShiftsLoggerClient.Models;
@@ -59,6 +57,36 @@ class ShiftService
         {
             Console.WriteLine($"Error message: {ex.Message}");
             return new ShiftDTO { };
+        }
+    }
+
+    internal async Task<ApiResponse<bool> DeleteShiftById(long id)
+    {
+        try
+        {
+            var requestUri = $"shifts/{id}";
+            using HttpResponseMessage response = await _httpClient.DeleteAsync(requestUri);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new ApiResponse<bool>
+                {
+                    Success = true,
+                    Message = "Shift has been deleted successfully",
+                    StatusCode = response.StatusCode
+                };
+            }
+
+            return new ApiResponse<bool>
+            {
+                Success = false,
+                Message = await response.Content.ReadAsStringAsync(),
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+
         }
     }
 }
