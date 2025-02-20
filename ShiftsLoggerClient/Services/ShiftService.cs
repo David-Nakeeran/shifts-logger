@@ -60,7 +60,7 @@ class ShiftService
         }
     }
 
-    internal async Task<ApiResponse<bool> DeleteShiftById(long id)
+    internal async Task<ApiResponse<bool>> DeleteShiftById(long id)
     {
         try
         {
@@ -86,7 +86,8 @@ class ShiftService
         }
         catch (Exception ex)
         {
-
+            Console.WriteLine($"Error message: {ex.Message}");
+            return null;
         }
     }
 }
