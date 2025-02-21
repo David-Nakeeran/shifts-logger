@@ -53,7 +53,7 @@ class AppCoordinator
                     break;
                 case "Delete shift":
                     Console.WriteLine("delete shift");
-                    await GetShiftById();
+                    await DeleteShift();
                     break;
                 case "Quit application":
                     isAppActive = false;
@@ -66,13 +66,13 @@ class AppCoordinator
     public async Task<List<ShiftDTO>> GetAllShifts()
     {
         var shifts = await _shiftService.GetAllShifts();
-        _displayManager.RenderGetAllShiftsTable(shifts);
         return shifts;
     }
 
     internal async Task AllShifts()
     {
-        await GetAllShifts();
+        var shifts = await GetAllShifts();
+        _displayManager.RenderGetAllShiftsTable(shifts);
         _userInput.WaitForUserInput();
     }
 
@@ -108,37 +108,46 @@ class AppCoordinator
             }
         }
         return new ShiftDTO { };
-        // _displayManager.RenderGetShiftByIdTable(shiftById);
-        // _userInput.WaitForUserInput();
-
-
-        // int count = 1;
-        // long shiftId;
-        // foreach (var shift in shifts)
-        // {
-        //     if (count == displayId)
-        //     {
-        //         shiftId = shift.ShiftId;
-        //         var shiftById = await _shiftService.GetShiftById(shiftId);
-        //         _displayManager.RenderGetShiftByIdTable(shiftById);
-        //         _userInput.WaitForUserInput();
-        //     }
-        //     count++;
-
-        // }
     }
 
     internal async Task DeleteShift()
     {
+        await AllShifts();
+
+        var displayId = _userInput.GetId();
+        var pairs = await GetKeyValuePairs();
+
+        if (!pairs.ContainsKey(displayId))
+        {
+            _displayManager.IncorrectId();
+            _userInput.WaitForUserInput();
+            return;
+
+        }
+
+        long shiftId = pairs[displayId];
+
         var result = await _shiftService.DeleteShiftById(shiftId);
 
         if (result.Success)
         {
-            // display manager method to show message on success
+            _displayManager.ShowMessage(result.Message);
+            _userInput.WaitForUserInput();
         }
         else
         {
-            // display manager method to show error status code and message
+            _displayManager.ShowMessage(result.Message);
+            _userInput.WaitForUserInput();
         }
+    }
+
+    internal async Task PostShift()
+    {
+        // get id of employee to add shift to
+        // display all employees
+
+        // get record if te employee
+        // store id and name in variables
+        // get start and end time in variables
     }
 }
