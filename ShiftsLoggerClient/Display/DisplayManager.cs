@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ShiftsLoggerClient.Models;
 using ShiftsLoggerClient.Utilities;
 using Spectre.Console;
@@ -41,5 +42,15 @@ class DisplayManager
 
 
         AnsiConsole.Write(table);
+    }
+
+    internal void ShowMessage(string message)
+    {
+        AnsiConsole.WriteLine(message);
+    }
+
+    internal void IncorrectId()
+    {
+        AnsiConsole.WriteLine("Id entered does not match, returning to main menu");
     }
 }
