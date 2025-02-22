@@ -31,10 +31,10 @@ public class UserInput
         return userSelection;
     }
 
-    internal int GetId()
+    internal int GetId(string message)
     {
-        int shiftId = AnsiConsole.Ask<int>("Please enter the id of shift");
-        return shiftId;
+        int userInput = AnsiConsole.Ask<int>(message);
+        return userInput;
     }
 
     internal void WaitForUserInput()
