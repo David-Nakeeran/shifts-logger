@@ -12,12 +12,14 @@ class AppCoordinator
     private readonly UserInput _userInput;
     private readonly ShiftService _shiftService;
     private readonly DisplayManager _displayManager;
+    private readonly EmployeeService _employeeService;
 
-    public AppCoordinator(UserInput userInput, ShiftService shiftService, DisplayManager displayManager)
+    public AppCoordinator(UserInput userInput, ShiftService shiftService, DisplayManager displayManager, EmployeeService employeeService)
     {
         _userInput = userInput;
         _shiftService = shiftService;
         _displayManager = displayManager;
+        _employeeService = employeeService;
     }
     internal async Task Start()
     {
@@ -30,7 +32,7 @@ class AppCoordinator
             switch (userSelection)
             {
                 case "View all employees":
-                    Console.WriteLine("all employees");
+                    await AllEmployees();
                     break;
                 case "Create employee":
                     Console.WriteLine("create employee");
@@ -63,6 +65,19 @@ class AppCoordinator
         }
     }
 
+    internal async Task<ApiResponse<List<EmployeeDTO>>> GetAllEmployees()
+    {
+        var employees = await _employeeService.GetAllEmployees();
+        return employees;
+    }
+
+    internal async Task AllEmployees()
+    {
+        var employees = await GetAllEmployees();
+        _displayManager.RenderGetAllEmployeesTable(employees.Data);
+        _userInput.WaitForUserInput();
+    }
+
     public async Task<List<ShiftDTO>> GetAllShifts()
     {
         var shifts = await _shiftService.GetAllShifts();
@@ -76,7 +91,7 @@ class AppCoordinator
         _userInput.WaitForUserInput();
     }
 
-    internal async Task<Dictionary<long, long>> GetKeyValuePairs()
+    internal async Task<Dictionary<long, long>> GetKeyValuePairsShifts()
     {
         var shifts = await GetAllShifts();
         var keyValuePairs = new Dictionary<long, long>();
@@ -90,13 +105,27 @@ class AppCoordinator
         return keyValuePairs;
     }
 
+    internal async Task<Dictionary<long, long>> GetKeyValuePairsEmployees()
+    {
+        var employees = await GetAllEmployees();
+        var keyValuePairs = new Dictionary<long, long>();
+        long displayId = 1;
+
+        foreach (var employee in employees.Data)
+        {
+            keyValuePairs[displayId] = employee.EmployeeId;
+            displayId++;
+        }
+        return keyValuePairs;
+    }
+
     internal async Task<ShiftDTO> GetShiftById()
     {
         var shifts = await GetAllShifts();
         _userInput.WaitForUserInput();
 
         var displayId = _userInput.GetId();
-        var pairs = await GetKeyValuePairs();
+        var pairs = await GetKeyValuePairsShifts();
         long shiftId;
 
         foreach (var element in pairs)
@@ -114,15 +143,14 @@ class AppCoordinator
     {
         await AllShifts();
 
-        var displayId = _userInput.GetId();
-        var pairs = await GetKeyValuePairs();
+        var displayId = _userInput.GetId("Please enter the id of shift");
+        var pairs = await GetKeyValuePairsEmployees();
 
         if (!pairs.ContainsKey(displayId))
         {
             _displayManager.IncorrectId();
             _userInput.WaitForUserInput();
             return;
-
         }
 
         long shiftId = pairs[displayId];
@@ -141,13 +169,32 @@ class AppCoordinator
         }
     }
 
+    internal async Task<ApiResponse<EmployeeDTO>> GetEmployeeById(long id)
+    {
+
+    }
+
     internal async Task PostShift()
     {
-        // get id of employee to add shift to
         // display all employees
+        await AllEmployees();
 
-        // get record if te employee
-        // store id and name in variables
+        // get id of employee to add shift to
+        var displayId = _userInput.GetId("Please enter the id of the employee you want create a shift for");
+
+        var idPairs = await GetKeyValuePairsEmployees();
+
+        if (!idPairs.ContainsKey(displayId))
+        {
+            _displayManager.IncorrectId();
+            _userInput.WaitForUserInput();
+            return;
+        }
+
+        long employeeId = idPairs[displayId];
+
+        // get employee by id
+        // get name and store in variable
         // get start and end time in variables
     }
 }
