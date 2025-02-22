@@ -63,4 +63,38 @@ class EmployeeService
             };
         }
     }
+
+    internal async Task<ApiResponse<EmployeeDTO>> PostEmployee(EmployeeDTO employeeDTO)
+    {
+        try
+        {
+            var requestUri = "employee";
+
+            var postResponse = await _httpClient.PostAsJsonAsync(requestUri, employeeDTO);
+
+            if (!postResponse.IsSuccessStatusCode)
+            {
+                string errorMessage = await postResponse.Content.ReadAsStringAsync();
+                return new ApiResponse<EmployeeDTO>
+                {
+                    Success = false,
+                    Message = errorMessage
+                };
+            }
+
+            var createdEmployee = await postResponse.Content.ReadFromJsonAsync<EmployeeDTO>()
+                ?? new EmployeeDTO();
+
+            return new ApiResponse<EmployeeDTO>
+            {
+                Success = true,
+                Data = createdEmployee
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error message:{ex.Message}");
+            return new ApiResponse<EmployeeDTO> { };
+        }
+    }
 }
