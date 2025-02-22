@@ -13,6 +13,24 @@ class DisplayManager
     {
         _calculateDuration = calculateDuration;
     }
+
+    internal void RenderGetAllEmployeesTable(List<EmployeeDTO> employees)
+    {
+        var table = new Table();
+        table.AddColumns("DisplayId", "Employee Name", "Shift Ids");
+        int count = 1;
+        foreach (var employee in employees)
+        {
+            var employeeName = employee.Name.ToString();
+
+            string shiftId = string.Join(", ", employee.ShiftId);
+
+            table.AddRow($"{count}", $"{employeeName}", $"{shiftId}");
+            count++;
+        }
+        AnsiConsole.Write(table);
+    }
+
     internal void RenderGetAllShiftsTable(List<ShiftDTO> shifts)
     {
         var table = new Table();
