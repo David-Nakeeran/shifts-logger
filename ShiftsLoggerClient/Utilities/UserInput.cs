@@ -2,8 +2,14 @@ using Spectre.Console;
 
 namespace ShiftsLoggerClient.Utilities;
 
-public class UserInput
+class UserInput
 {
+    private readonly Validation _validation;
+
+    public UserInput(Validation validation)
+    {
+        _validation = validation;
+    }
     public string ShowMenu()
     {
         string[] menuOptions = {
@@ -31,9 +37,16 @@ public class UserInput
         return userSelection;
     }
 
-    internal int GetId(string message)
+    internal long GetId(string message)
     {
-        int userInput = AnsiConsole.Ask<int>(message);
+        long userInput = AnsiConsole.Ask<long>(message);
+        return userInput;
+    }
+
+    internal string GetEmployeeName(string message)
+    {
+        string userInput = AnsiConsole.Ask<string>(message);
+        userInput = _validation.ValidateString(message, userInput);
         return userInput;
     }
 
