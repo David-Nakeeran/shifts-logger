@@ -19,6 +19,7 @@ class Program
         services.AddSingleton<EmployeeService>();
         services.AddSingleton<ShiftService>();
         services.AddSingleton<CalculateDuration>();
+        services.AddSingleton<Validation>();
         services.AddSingleton<DisplayManager>();
         services.AddSingleton<AppCoordinator>();
 
