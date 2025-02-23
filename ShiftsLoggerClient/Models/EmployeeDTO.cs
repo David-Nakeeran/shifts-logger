@@ -12,5 +12,4 @@ public class EmployeeDTO
 
     [JsonPropertyName("shiftId")]
     public List<long>? ShiftId { get; set; }
-
 }
