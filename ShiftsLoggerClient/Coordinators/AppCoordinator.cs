@@ -1,5 +1,6 @@
 
 
+using Microsoft.VisualBasic;
 using ShiftsLoggerClient.Display;
 using ShiftsLoggerClient.Models;
 using ShiftsLoggerClient.Services;
@@ -35,13 +36,13 @@ class AppCoordinator
                     await AllEmployees();
                     break;
                 case "Create employee":
-                    Console.WriteLine("create employee");
+                    await CreateEmployee();
                     break;
                 case "Update employee":
-                    Console.WriteLine("update employee");
+                    await UpdateEmployee();
                     break;
                 case "Delete employee":
-                    Console.WriteLine("delete employee");
+                    await DeleteEmployee();
                     break;
                 case "View all shifts":
                     Console.WriteLine("all shifts");
@@ -119,25 +120,25 @@ class AppCoordinator
         return keyValuePairs;
     }
 
-    internal async Task<ShiftDTO> GetShiftById()
-    {
-        var shifts = await GetAllShifts();
-        _userInput.WaitForUserInput();
+    // internal async Task<ShiftDTO> GetShiftById()
+    // {
+    //     var shifts = await GetAllShifts();
+    //     _userInput.WaitForUserInput();
 
-        var displayId = _userInput.GetId();
-        var pairs = await GetKeyValuePairsShifts();
-        long shiftId;
+    // var displayId = _userInput.GetId();
+    //     var pairs = await GetKeyValuePairsShifts();
+    //     long shiftId;
 
-        foreach (var element in pairs)
-        {
-            if (element.Key == displayId)
-            {
-                shiftId = element.Value;
-                return await _shiftService.GetShiftById(shiftId);
-            }
-        }
-        return new ShiftDTO { };
-    }
+    //     foreach (var element in pairs)
+    //     {
+    //         if (element.Key == displayId)
+    //         {
+    //             shiftId = element.Value;
+    //             return await _shiftService.GetShiftById(shiftId);
+    //         }
+    //     }
+    //     return new ShiftDTO { };
+    // }
 
     internal async Task DeleteShift()
     {
@@ -169,9 +170,106 @@ class AppCoordinator
         }
     }
 
-    internal async Task<ApiResponse<EmployeeDTO>> GetEmployeeById(long id)
+    internal async Task<ApiResponse<EmployeeDTO>> GetEmployee(long id)
     {
+        var idPairs = await GetKeyValuePairsEmployees();
+        if (!idPairs.ContainsKey(id))
+        {
+            _displayManager.IncorrectId();
+            _userInput.WaitForUserInput();
+            return new ApiResponse<EmployeeDTO> { }
+            ;
+        }
 
+        long employeeId = idPairs[id];
+
+        return await _employeeService.GetEmployeeById(employeeId);
+    }
+
+    internal async Task CreateEmployee()
+    {
+        // get user input for name
+        var input = _userInput.GetEmployeeName("Please enter employee name or enter 0 to return to main menu");
+        if (input == "0") return;
+
+        // pass to service
+        var createdShift = await _employeeService.PostEmployee(
+            new EmployeeDTO
+            {
+                Name = input
+            }
+        );
+        if (!createdShift.Success)
+        {
+            _displayManager.ShowMessage(createdShift.Message);
+            _userInput.WaitForUserInput();
+        }
+        else
+        {
+            _displayManager.ShowMessage(createdShift.Message);
+            _userInput.WaitForUserInput();
+        }
+
+    }
+
+    internal async Task UpdateEmployee()
+    {
+        await AllEmployees();
+
+        var displayId = _userInput.GetId("Please enter the id of employee you wish to update or enter 0 to return to main menu");
+        if (displayId == 0) return;
+
+        ApiResponse<EmployeeDTO> employeeObject = await GetEmployee(displayId);
+        Console.WriteLine(employeeObject.Data);
+        employeeObject.Data.Name = _userInput.GetEmployeeName("Please enter updated name for employee");
+
+
+        var updatedEmployee = await _employeeService.UpdateEmployee(employeeObject.Data, employeeObject.Data.EmployeeId);
+
+        if (!updatedEmployee.Success)
+        {
+            _displayManager.ShowMessage(updatedEmployee.Message);
+            Console.WriteLine(updatedEmployee.Success);
+            _userInput.WaitForUserInput();
+        }
+        else
+        {
+            _displayManager.ShowMessage(updatedEmployee.Message);
+            _userInput.WaitForUserInput();
+        }
+
+    }
+
+    internal async Task DeleteEmployee()
+    {
+        await AllEmployees();
+
+        var displayId = _userInput.GetId("Please enter the id of employee or enter 0 to return to main menu");
+        if (displayId == 0) return;
+
+        var idPairs = await GetKeyValuePairsEmployees();
+
+        if (!idPairs.ContainsKey(displayId))
+        {
+            _displayManager.IncorrectId();
+            _userInput.WaitForUserInput();
+            return;
+        }
+
+        long employeeId = idPairs[displayId];
+
+        var result = await _employeeService.DeleteEmployee(employeeId);
+
+        if (result.Success)
+        {
+            _displayManager.ShowMessage(result.Message);
+            _userInput.WaitForUserInput();
+        }
+        else
+        {
+            _displayManager.ShowMessage(result.Message);
+            _userInput.WaitForUserInput();
+        }
     }
 
     internal async Task PostShift()
