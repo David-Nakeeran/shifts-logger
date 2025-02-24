@@ -45,17 +45,15 @@ class AppCoordinator
                     await DeleteEmployee();
                     break;
                 case "View all shifts":
-                    Console.WriteLine("all shifts");
                     await AllShifts();
                     break;
                 case "Create shift":
-                    Console.WriteLine("create shift");
+                    await CreateShift();
                     break;
                 case "Update shift":
                     Console.WriteLine("update shift");
                     break;
                 case "Delete shift":
-                    Console.WriteLine("delete shift");
                     await DeleteShift();
                     break;
                 case "Quit application":
@@ -79,33 +77,6 @@ class AppCoordinator
         _userInput.WaitForUserInput();
     }
 
-    public async Task<List<ShiftDTO>> GetAllShifts()
-    {
-        var shifts = await _shiftService.GetAllShifts();
-        return shifts;
-    }
-
-    internal async Task AllShifts()
-    {
-        var shifts = await GetAllShifts();
-        _displayManager.RenderGetAllShiftsTable(shifts);
-        _userInput.WaitForUserInput();
-    }
-
-    internal async Task<Dictionary<long, long>> GetKeyValuePairsShifts()
-    {
-        var shifts = await GetAllShifts();
-        var keyValuePairs = new Dictionary<long, long>();
-        long displayId = 1;
-
-        foreach (var shift in shifts)
-        {
-            keyValuePairs[displayId] = shift.ShiftId;
-            displayId++;
-        }
-        return keyValuePairs;
-    }
-
     internal async Task<Dictionary<long, long>> GetKeyValuePairsEmployees()
     {
         var employees = await GetAllEmployees();
@@ -120,65 +91,14 @@ class AppCoordinator
         return keyValuePairs;
     }
 
-    // internal async Task<ShiftDTO> GetShiftById()
-    // {
-    //     var shifts = await GetAllShifts();
-    //     _userInput.WaitForUserInput();
-
-    // var displayId = _userInput.GetId();
-    //     var pairs = await GetKeyValuePairsShifts();
-    //     long shiftId;
-
-    //     foreach (var element in pairs)
-    //     {
-    //         if (element.Key == displayId)
-    //         {
-    //             shiftId = element.Value;
-    //             return await _shiftService.GetShiftById(shiftId);
-    //         }
-    //     }
-    //     return new ShiftDTO { };
-    // }
-
-    internal async Task DeleteShift()
-    {
-        await AllShifts();
-
-        var displayId = _userInput.GetId("Please enter the id of shift");
-        var pairs = await GetKeyValuePairsEmployees();
-
-        if (!pairs.ContainsKey(displayId))
-        {
-            _displayManager.IncorrectId();
-            _userInput.WaitForUserInput();
-            return;
-        }
-
-        long shiftId = pairs[displayId];
-
-        var result = await _shiftService.DeleteShiftById(shiftId);
-
-        if (result.Success)
-        {
-            _displayManager.ShowMessage(result.Message);
-            _userInput.WaitForUserInput();
-        }
-        else
-        {
-            _displayManager.ShowMessage(result.Message);
-            _userInput.WaitForUserInput();
-        }
-    }
-
-    internal async Task<ApiResponse<EmployeeDTO>> GetEmployee(long id)
+    internal async Task<ApiResponse<EmployeeDTO>?> GetEmployee(long id)
     {
         var idPairs = await GetKeyValuePairsEmployees();
         if (!idPairs.ContainsKey(id))
         {
             _displayManager.IncorrectId();
             _userInput.WaitForUserInput();
-            return new ApiResponse<EmployeeDTO> { }
-            ;
+            return null;
         }
 
         long employeeId = idPairs[id];
@@ -188,17 +108,16 @@ class AppCoordinator
 
     internal async Task CreateEmployee()
     {
-        // get user input for name
         var input = _userInput.GetEmployeeName("Please enter employee name or enter 0 to return to main menu");
         if (input == "0") return;
 
-        // pass to service
         var createdShift = await _employeeService.PostEmployee(
             new EmployeeDTO
             {
                 Name = input
             }
         );
+
         if (!createdShift.Success)
         {
             _displayManager.ShowMessage(createdShift.Message);
@@ -209,7 +128,6 @@ class AppCoordinator
             _displayManager.ShowMessage(createdShift.Message);
             _userInput.WaitForUserInput();
         }
-
     }
 
     internal async Task UpdateEmployee()
@@ -229,7 +147,6 @@ class AppCoordinator
         if (!updatedEmployee.Success)
         {
             _displayManager.ShowMessage(updatedEmployee.Message);
-            Console.WriteLine(updatedEmployee.Success);
             _userInput.WaitForUserInput();
         }
         else
@@ -237,7 +154,6 @@ class AppCoordinator
             _displayManager.ShowMessage(updatedEmployee.Message);
             _userInput.WaitForUserInput();
         }
-
     }
 
     internal async Task DeleteEmployee()
@@ -272,15 +188,91 @@ class AppCoordinator
         }
     }
 
-    internal async Task PostShift()
+    public async Task<ApiResponse<List<ShiftDTO>>> GetAllShifts()
     {
-        // display all employees
+        var shifts = await _shiftService.GetAllShifts();
+        return shifts;
+    }
+
+    internal async Task AllShifts()
+    {
+        var shifts = await GetAllShifts();
+        _displayManager.RenderGetAllShiftsTable(shifts.Data);
+        _userInput.WaitForUserInput();
+    }
+
+    internal async Task<Dictionary<long, long>> GetKeyValuePairsShifts()
+    {
+        var shifts = await GetAllShifts();
+        var keyValuePairs = new Dictionary<long, long>();
+        long displayId = 1;
+
+        foreach (var shift in shifts.Data)
+        {
+            keyValuePairs[displayId] = shift.ShiftId;
+            displayId++;
+        }
+        return keyValuePairs;
+    }
+
+    internal async Task<ApiResponse<ShiftDTO>> GetShift(long id)
+    {
+        var idPairs = await GetKeyValuePairsShifts();
+        if (!idPairs.ContainsKey(id))
+        {
+            _displayManager.IncorrectId();
+            _userInput.WaitForUserInput();
+            return new ApiResponse<ShiftDTO> { }
+            ;
+        }
+
+        long shiftId = idPairs[id];
+
+        return await _shiftService.GetShiftById(shiftId);
+    }
+
+    internal async Task CreateShift()
+    {
         await AllEmployees();
+        var displayId = _userInput.GetId("Please enter the id of employee you wish to make a shift for or enter 0 to return to main menu");
+        if (displayId == 0) return;
 
-        // get id of employee to add shift to
-        var displayId = _userInput.GetId("Please enter the id of the employee you want create a shift for");
+        var employeeObject = await GetEmployee(displayId);
+        if (employeeObject == null) return;
 
-        var idPairs = await GetKeyValuePairsEmployees();
+        var startTime = _userInput.GetShiftTimes("Please enter the start date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 13:15'");
+        var endTime = _userInput.GetShiftTimes("Please enter the end date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 15:30'");
+
+        var createdShift = await _shiftService.PostShift(
+            new ShiftDTO
+            {
+                EmployeeId = employeeObject.Data.EmployeeId,
+                StartTime = startTime,
+                EndTime = endTime,
+                Name = employeeObject.Data.Name
+            }
+        );
+
+        if (!createdShift.Success)
+        {
+            _displayManager.ShowMessage(createdShift.Message);
+            _userInput.WaitForUserInput();
+        }
+        else
+        {
+            _displayManager.ShowMessage(createdShift.Message);
+            _userInput.WaitForUserInput();
+        }
+    }
+
+    internal async Task DeleteShift()
+    {
+        await AllShifts();
+
+        var displayId = _userInput.GetId("Please enter the id of shift or enter 0 to return to main menu");
+        if (displayId == 0) return;
+
+        var idPairs = await GetKeyValuePairsShifts();
 
         if (!idPairs.ContainsKey(displayId))
         {
@@ -289,10 +281,19 @@ class AppCoordinator
             return;
         }
 
-        long employeeId = idPairs[displayId];
+        long shiftId = idPairs[displayId];
 
-        // get employee by id
-        // get name and store in variable
-        // get start and end time in variables
+        var result = await _shiftService.DeleteEmployee(shiftId);
+
+        if (result.Success)
+        {
+            _displayManager.ShowMessage(result.Message);
+            _userInput.WaitForUserInput();
+        }
+        else
+        {
+            _displayManager.ShowMessage(result.Message);
+            _userInput.WaitForUserInput();
+        }
     }
 }
