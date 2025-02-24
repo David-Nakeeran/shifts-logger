@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
 using ShiftsLoggerClient.Models;
 
@@ -23,44 +24,161 @@ class ShiftService
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "ShiftsLoggerClient");
     }
 
-    public async Task<List<ShiftDTO>> GetAllShifts()
+    internal async Task<ApiResponse<List<ShiftDTO>>> GetAllShifts()
     {
         try
         {
             var requestUri = "shifts";
 
-            await using Stream stream = await _httpClient.GetStreamAsync(requestUri);
+            using HttpResponseMessage response = await _httpClient.GetAsync(requestUri);
 
-            var shifts = await JsonSerializer.DeserializeAsync<List<ShiftDTO>>(stream);
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorMessage = await response.Content.ReadAsStringAsync();
+                return new ApiResponse<List<ShiftDTO>>
+                {
+                    Success = false,
+                    Message = errorMessage
+                };
+            }
+            var shifts = await response.Content.ReadFromJsonAsync<List<ShiftDTO>>()
+                ?? new List<ShiftDTO>();
 
-            return shifts ?? new List<ShiftDTO>();
-
+            return new ApiResponse<List<ShiftDTO>>
+            {
+                Success = true,
+                Message = "Success",
+                Data = shifts
+            };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error message: {ex.Message}");
-            return new List<ShiftDTO>();
+            return new ApiResponse<List<ShiftDTO>>
+            {
+                Success = false,
+                Message = $"Error message: {ex.Message}"
+            };
         }
     }
 
-    public async Task<ShiftDTO> GetShiftById(long id)
+    internal async Task<ApiResponse<ShiftDTO>> GetShiftById(long id)
     {
         try
         {
             var requestUri = $"shifts/{id}";
-            await using Stream stream = await _httpClient.GetStreamAsync(requestUri);
 
-            var shift = await JsonSerializer.DeserializeAsync<ShiftDTO>(stream);
-            return shift ?? new ShiftDTO { };
+            using HttpResponseMessage response = await _httpClient.GetAsync(requestUri);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorMessage = await response.Content.ReadAsStringAsync();
+                return new ApiResponse<ShiftDTO>
+                {
+                    Success = false,
+                    Message = errorMessage
+                };
+            }
+            var shift = await response.Content.ReadFromJsonAsync<ShiftDTO>()
+                ?? new ShiftDTO();
+
+            return new ApiResponse<ShiftDTO>
+            {
+                Success = true,
+                Message = "Success",
+                Data = shift
+            };
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error message: {ex.Message}");
-            return new ShiftDTO { };
+            return new ApiResponse<ShiftDTO>
+            {
+                Success = false,
+                Message = $"Error message: {ex.Message}"
+            };
         }
     }
 
-    internal async Task<ApiResponse<bool>> DeleteShiftById(long id)
+    internal async Task<ApiResponse<ShiftDTO>> PostShift(ShiftDTO shiftDTO)
+    {
+        try
+        {
+            var requestUri = "shifts";
+
+            var postResponse = await _httpClient.PostAsJsonAsync(requestUri, shiftDTO);
+
+            if (!postResponse.IsSuccessStatusCode)
+            {
+                string errorMessage = await postResponse.Content.ReadAsStringAsync();
+                return new ApiResponse<ShiftDTO>
+                {
+                    Success = false,
+                    Message = errorMessage
+                };
+            }
+
+            var createdShift = await postResponse.Content.ReadFromJsonAsync<ShiftDTO>()
+                ?? new ShiftDTO();
+
+            return new ApiResponse<ShiftDTO>
+            {
+                Success = true,
+                Message = "Shift created successfully",
+                Data = createdShift
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error message:{ex.Message}");
+            return new ApiResponse<ShiftDTO>
+            {
+                Success = false,
+                Message = $"Error message:{ex.Message}"
+            };
+        }
+    }
+
+    internal async Task<ApiResponse<ShiftDTO>> UpdateShift(ShiftDTO shiftDTO, long id)
+    {
+        try
+        {
+            var requestUri = $"shifts/{id}";
+
+            var postResponse = await _httpClient.PutAsJsonAsync(requestUri, shiftDTO);
+
+            if (!postResponse.IsSuccessStatusCode)
+            {
+                string errorMessage = await postResponse.Content.ReadAsStringAsync();
+                return new ApiResponse<ShiftDTO>
+                {
+                    Success = false,
+                    Message = errorMessage
+                };
+            }
+
+            var updatedShift = await postResponse.Content.ReadFromJsonAsync<ShiftDTO>()
+                ?? new ShiftDTO();
+
+            return new ApiResponse<ShiftDTO>
+            {
+                Success = true,
+                Message = "Shift has been successfully updated",
+                Data = updatedShift
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error message:{ex.Message}");
+            return new ApiResponse<ShiftDTO>
+            {
+                Success = false,
+                Message = $"Error message:{ex.Message}"
+            };
+        }
+    }
+
+    internal async Task<ApiResponse<bool>> DeleteEmployee(long id)
     {
         try
         {
@@ -87,7 +205,11 @@ class ShiftService
         catch (Exception ex)
         {
             Console.WriteLine($"Error message: {ex.Message}");
-            return null;
+            return new ApiResponse<bool>
+            {
+                Success = false,
+                Message = $"Error message: {ex.Message}"
+            };
         }
     }
 }
