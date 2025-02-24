@@ -5,10 +5,12 @@ namespace ShiftsLoggerClient.Utilities;
 class UserInput
 {
     private readonly Validation _validation;
+    private readonly DateTimeParser _parser;
 
-    public UserInput(Validation validation)
+    public UserInput(Validation validation, DateTimeParser parser)
     {
         _validation = validation;
+        _parser = parser;
     }
     public string ShowMenu()
     {
@@ -48,6 +50,13 @@ class UserInput
         string userInput = AnsiConsole.Ask<string>(message);
         userInput = _validation.ValidateString(message, userInput);
         return userInput;
+    }
+
+    internal DateTime GetShiftTimes(string message)
+    {
+        string userInput = AnsiConsole.Ask<string>(message);
+        DateTime parsedTime = _parser.Parser(userInput);
+        return parsedTime;
     }
 
     internal void WaitForUserInput()
