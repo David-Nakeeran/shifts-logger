@@ -20,6 +20,7 @@ class Program
         services.AddSingleton<ShiftService>();
         services.AddSingleton<CalculateDuration>();
         services.AddSingleton<Validation>();
+        services.AddSingleton<DateTimeParser>();
         services.AddSingleton<DisplayManager>();
         services.AddSingleton<AppCoordinator>();
 
