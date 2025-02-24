@@ -39,8 +39,8 @@ class DisplayManager
         foreach (var shift in shifts)
         {
             var duration = _calculateDuration.CalcDuration(shift.StartTime, shift.EndTime);
-            var start = shift.StartTime.ToString("HH:mm");
-            var end = shift.StartTime.ToString("HH:mm");
+            var start = shift.StartTime.ToString("dd-MM-yyyy HH:mm");
+            var end = shift.EndTime.ToString("dd-MM-yyyy HH:mm");
             table.AddRow($"{count}", $"{shift.Name}", $"{start}", $"{end}", $"{duration.ToString(@"hh\:mm")}");
             count++;
         }
@@ -55,7 +55,7 @@ class DisplayManager
 
         var duration = _calculateDuration.CalcDuration(shift.StartTime, shift.EndTime);
         var start = shift.StartTime.ToString("HH:mm");
-        var end = shift.StartTime.ToString("HH:mm");
+        var end = shift.EndTime.ToString("HH:mm");
         table.AddRow($"{shift.Name}", $"{start}", $"{end}", $"{duration.ToString(@"hh\:mm")}");
 
 
