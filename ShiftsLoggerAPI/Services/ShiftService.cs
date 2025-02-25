@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
 
