@@ -112,7 +112,6 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
         {
             throw new Exception("Error creating employee", ex);
         }
-
     }
 
     public async Task<bool> DeleteEmployeeAsync(long id)
