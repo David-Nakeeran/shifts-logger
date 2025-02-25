@@ -1,6 +1,3 @@
-
-
-using Microsoft.VisualBasic;
 using ShiftsLoggerClient.Display;
 using ShiftsLoggerClient.Models;
 using ShiftsLoggerClient.Services;
@@ -14,13 +11,15 @@ class AppCoordinator
     private readonly ShiftService _shiftService;
     private readonly DisplayManager _displayManager;
     private readonly EmployeeService _employeeService;
+    private readonly Validation _validation;
 
-    public AppCoordinator(UserInput userInput, ShiftService shiftService, DisplayManager displayManager, EmployeeService employeeService)
+    public AppCoordinator(UserInput userInput, ShiftService shiftService, DisplayManager displayManager, EmployeeService employeeService, Validation validation)
     {
         _userInput = userInput;
         _shiftService = shiftService;
         _displayManager = displayManager;
         _employeeService = employeeService;
+        _validation = validation;
     }
     internal async Task Start()
     {
@@ -51,7 +50,7 @@ class AppCoordinator
                     await CreateShift();
                     break;
                 case "Update shift":
-                    Console.WriteLine("update shift");
+                    await UpdateShift();
                     break;
                 case "Delete shift":
                     await DeleteShift();
@@ -241,7 +240,11 @@ class AppCoordinator
         if (employeeObject == null) return;
 
         var startTime = _userInput.GetShiftTimes("Please enter the start date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 13:15'");
-        var endTime = _userInput.GetShiftTimes("Please enter the end date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 15:30'");
+        var endTime = _userInput.GetShiftTimes("Please enter the end date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 15:30' later than the start");
+        while (!_validation.IsEndTimeLaterThanStartTime(startTime, endTime))
+        {
+            endTime = _userInput.GetShiftTimes("Please enter the end date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 15:30' later than the start");
+        }
 
         var createdShift = await _shiftService.PostShift(
             new ShiftDTO
@@ -261,6 +264,39 @@ class AppCoordinator
         else
         {
             _displayManager.ShowMessage(createdShift.Message);
+            _userInput.WaitForUserInput();
+        }
+    }
+
+    internal async Task UpdateShift()
+    {
+        await AllShifts();
+
+        var displayId = _userInput.GetId("Please enter the id of shift you wish to update or enter 0 to return to main menu");
+        if (displayId == 0) return;
+
+        ApiResponse<ShiftDTO> shiftObject = await GetShift(displayId);
+
+        var startTime = _userInput.GetShiftTimes("Please enter the start date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 13:15'");
+        var endTime = _userInput.GetShiftTimes("Please enter the end date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 15:30' later than the start");
+        while (!_validation.IsEndTimeLaterThanStartTime(startTime, endTime))
+        {
+            endTime = _userInput.GetShiftTimes("Please enter the end date and time in 'dd-mm-yyyy hh:mm' format, for example '24-02-2025 15:30' later than the start");
+        }
+
+        shiftObject.Data.StartTime = startTime;
+        shiftObject.Data.EndTime = endTime;
+
+        var updatedShift = await _shiftService.UpdateShift(shiftObject.Data, shiftObject.Data.ShiftId);
+
+        if (!updatedShift.Success)
+        {
+            _displayManager.ShowMessage(updatedShift.Message);
+            _userInput.WaitForUserInput();
+        }
+        else
+        {
+            _displayManager.ShowMessage(updatedShift.Message);
             _userInput.WaitForUserInput();
         }
     }
