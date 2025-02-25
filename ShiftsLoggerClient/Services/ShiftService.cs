@@ -41,8 +41,7 @@ class ShiftService
                     Message = errorMessage
                 };
             }
-            var shifts = await response.Content.ReadFromJsonAsync<List<ShiftDTO>>()
-                ?? new List<ShiftDTO>();
+            var shifts = await response.Content.ReadFromJsonAsync<List<ShiftDTO>>();
 
             return new ApiResponse<List<ShiftDTO>>
             {
@@ -79,8 +78,7 @@ class ShiftService
                     Message = errorMessage
                 };
             }
-            var shift = await response.Content.ReadFromJsonAsync<ShiftDTO>()
-                ?? new ShiftDTO();
+            var shift = await response.Content.ReadFromJsonAsync<ShiftDTO>();
 
             return new ApiResponse<ShiftDTO>
             {
@@ -118,8 +116,7 @@ class ShiftService
                 };
             }
 
-            var createdShift = await postResponse.Content.ReadFromJsonAsync<ShiftDTO>()
-                ?? new ShiftDTO();
+            var createdShift = await postResponse.Content.ReadFromJsonAsync<ShiftDTO>();
 
             return new ApiResponse<ShiftDTO>
             {
@@ -157,8 +154,7 @@ class ShiftService
                 };
             }
 
-            var updatedShift = await postResponse.Content.ReadFromJsonAsync<ShiftDTO>()
-                ?? new ShiftDTO();
+            var updatedShift = await postResponse.Content.ReadFromJsonAsync<ShiftDTO>();
 
             return new ApiResponse<ShiftDTO>
             {
