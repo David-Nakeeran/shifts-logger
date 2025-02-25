@@ -15,34 +15,6 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet = _context.Set<T>();
     }
 
-    public async Task<List<T>> GetAllAsync()
-    {
-        return await _dbSet.ToListAsync();
-    }
-
-    public async Task<T> GetByIdAsync(long id)
-    {
-        return await _dbSet.FindAsync(id);
-    }
-
-    public async Task AddAsync(T entity)
-    {
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<T> UpdateAsync(long id, T entity)
-    {
-        var existingEntity = await _dbSet.FindAsync(id);
-        if (existingEntity != null)
-        {
-            _context.Entry(existingEntity).CurrentValues.SetValues(entity);
-            await _context.SaveChangesAsync();
-            return existingEntity;
-        }
-        return null;
-    }
-
     public async Task<bool> DeleteAsync(long id)
     {
         try
