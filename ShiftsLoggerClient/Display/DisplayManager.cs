@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ShiftsLoggerClient.Models;
 using ShiftsLoggerClient.Utilities;
 using Spectre.Console;
