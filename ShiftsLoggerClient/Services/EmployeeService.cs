@@ -43,8 +43,7 @@ class EmployeeService
                     Message = errorMessage
                 };
             }
-            var employees = await response.Content.ReadFromJsonAsync<List<EmployeeDTO>>()
-                ?? new List<EmployeeDTO>();
+            var employees = await response.Content.ReadFromJsonAsync<List<EmployeeDTO>>();
 
             return new ApiResponse<List<EmployeeDTO>>
             {
@@ -81,8 +80,7 @@ class EmployeeService
                     Message = errorMessage
                 };
             }
-            var employee = await response.Content.ReadFromJsonAsync<EmployeeDTO>()
-                ?? new EmployeeDTO();
+            var employee = await response.Content.ReadFromJsonAsync<EmployeeDTO>();
 
             return new ApiResponse<EmployeeDTO>
             {
@@ -120,8 +118,7 @@ class EmployeeService
                 };
             }
 
-            var createdEmployee = await postResponse.Content.ReadFromJsonAsync<EmployeeDTO>()
-                ?? new EmployeeDTO();
+            var createdEmployee = await postResponse.Content.ReadFromJsonAsync<EmployeeDTO>();
 
             return new ApiResponse<EmployeeDTO>
             {
@@ -159,8 +156,7 @@ class EmployeeService
                 };
             }
 
-            var updatedEmployee = await postResponse.Content.ReadFromJsonAsync<EmployeeDTO>()
-                ?? new EmployeeDTO();
+            var updatedEmployee = await postResponse.Content.ReadFromJsonAsync<EmployeeDTO>();
 
             return new ApiResponse<EmployeeDTO>
             {
