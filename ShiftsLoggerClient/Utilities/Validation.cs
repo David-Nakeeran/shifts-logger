@@ -34,4 +34,10 @@ class Validation
         }
         return input;
     }
+
+    internal bool IsEndTimeLaterThanStartTime(DateTime start, DateTime end)
+    {
+        return end > start;
+    }
+
 }
