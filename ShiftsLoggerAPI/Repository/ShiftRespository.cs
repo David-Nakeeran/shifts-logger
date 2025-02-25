@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
@@ -119,10 +118,5 @@ public class ShiftRepository : Repository<Shift>, IShiftRepository
     public async Task<bool> DeleteShiftAsync(long id)
     {
         return await base.DeleteAsync(id);
-    }
-
-    public Task<bool> EmployeeExistsAsync(long id)
-    {
-        throw new NotImplementedException();
     }
 }
