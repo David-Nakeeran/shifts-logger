@@ -1,7 +1,3 @@
-
-
-using System.Globalization;
-
 namespace ShiftsLoggerClient.Utilities;
 
 class CalculateDuration
@@ -10,6 +6,4 @@ class CalculateDuration
     {
         return end - start;
     }
-
-
 }
