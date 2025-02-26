@@ -15,6 +15,7 @@ class DisplayManager
 
     internal void RenderGetAllEmployeesTable(List<EmployeeDTO> employees)
     {
+        Console.Clear();
         var table = new Table();
         table.AddColumns("DisplayId", "Employee Name", "Shift Ids");
         int count = 1;
@@ -32,6 +33,7 @@ class DisplayManager
 
     internal void RenderGetAllShiftsTable(List<ShiftDTO> shifts)
     {
+        Console.Clear();
         var table = new Table();
         table.AddColumns("DisplayId", "Employee Name", "Shift Start", "Shift End", "Duration");
         int count = 1;
@@ -48,15 +50,14 @@ class DisplayManager
 
     internal void RenderGetShiftByIdTable(ShiftDTO shift)
     {
+        Console.Clear();
         var table = new Table();
         table.AddColumns("Employee Name", "Shift Start", "Shift End", "Duration");
-
 
         var duration = _calculateDuration.CalcDuration(shift.StartTime, shift.EndTime);
         var start = shift.StartTime.ToString("HH:mm");
         var end = shift.EndTime.ToString("HH:mm");
         table.AddRow($"{shift.Name}", $"{start}", $"{end}", $"{duration.ToString(@"hh\:mm")}");
-
 
         AnsiConsole.Write(table);
     }
