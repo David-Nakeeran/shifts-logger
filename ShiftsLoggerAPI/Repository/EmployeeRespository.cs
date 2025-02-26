@@ -26,7 +26,6 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
         {
             throw new Exception("Error fetching all employees", ex);
         }
-
     }
 
     public async Task<Employee> GetByIdWithShiftsAsync(long id)
