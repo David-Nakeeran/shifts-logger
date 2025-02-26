@@ -39,5 +39,4 @@ class Validation
     {
         return end > start;
     }
-
 }
