@@ -14,7 +14,6 @@ class Program
     {
         var services = new ServiceCollection();
 
-        services.AddSingleton<MenuHandler>();
         services.AddSingleton<UserInput>();
         services.AddSingleton<EmployeeService>();
         services.AddSingleton<ShiftService>();
