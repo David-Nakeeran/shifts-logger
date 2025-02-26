@@ -59,7 +59,6 @@ class AppCoordinator
                     isAppActive = false;
                     break;
             }
-
         }
     }
 
