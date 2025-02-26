@@ -1,10 +1,6 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
-using ShiftsLoggerAPI.Services;
 
 namespace ShiftsLoggerAPI.Controllers
 {
