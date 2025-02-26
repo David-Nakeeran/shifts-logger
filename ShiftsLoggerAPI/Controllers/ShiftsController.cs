@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShiftsLoggerAPI.Data;
 using ShiftsLoggerAPI.Interface;
 using ShiftsLoggerAPI.Models;
 
@@ -11,16 +8,14 @@ namespace ShiftsLoggerAPI.Controllers
     [ApiController]
     public class ShiftsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
         private readonly IShiftService _shiftService;
+
         private readonly IShiftMapper _shiftMapper;
 
-        public ShiftsController(ApplicationDbContext context, IShiftService shiftService, IShiftMapper shiftMapper)
+        public ShiftsController(IShiftService shiftService, IShiftMapper shiftMapper)
         {
-            _context = context;
             _shiftService = shiftService;
             _shiftMapper = shiftMapper;
-
         }
 
         // GET: api/Shifts
@@ -141,6 +136,5 @@ namespace ShiftsLoggerAPI.Controllers
 
             return NoContent();
         }
-
     }
 }
