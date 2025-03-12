@@ -29,9 +29,9 @@ namespace ShiftsLoggerAPI.Controllers
                 return StatusCode(500, shifts.Error);
             }
 
-            if (shifts.Data == null && !shifts.Success)
+            if (shifts.Data == null)
             {
-                return NotFound();
+                return Ok(new List<ShiftDTO>());
             }
 
             if (!shifts.Success)
@@ -41,10 +41,6 @@ namespace ShiftsLoggerAPI.Controllers
 
             var shiftDTOs = shifts?.Data?.Select(s => _shiftMapper.ShiftToDTO(s)).ToList();
 
-            if (shiftDTOs?.Count == 0)
-            {
-                return Ok(new List<ShiftDTO>());
-            }
             return Ok(shiftDTOs);
         }
 
